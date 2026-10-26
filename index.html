@@ -167,21 +167,6 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
 .empty-cart{padding:30px 10px;text-align:center;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:60;max-width:min(92vw,460px);background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:12px;padding:12px 16px;font-size:14.5px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 .toast[hidden]{display:none}
-/* ---------- kits ---------- */
-.kits{margin:0 0 34px}
-.kits h2{margin:0 0 4px;font-size:28px;line-height:1.1;font-weight:800;font-stretch:78%}
-.kits>p{margin:0 0 12px;color:var(--muted);font-size:14px;max-width:70ch}
-.kit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
-.kit{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:14px}
-.kit h3{margin:0;font-size:20px;font-weight:800;font-stretch:80%}
-.kit-d{margin:0;font-size:13.5px;color:var(--muted)}
-.kit ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2)}
-.kit-p{margin-top:auto;display:grid;gap:2px;padding-top:6px;font-variant-numeric:tabular-nums}
-.kit-p s{color:var(--muted);font-size:13px}
-.kit-p .price em{font-style:normal;font-size:13px;font-weight:600;color:var(--muted)}
-.kit-p .ah{color:var(--wa-dark);font-weight:650;font-size:13px}
-.kit-p .pk{font-size:13px;color:var(--ink-2)}
-.kit .btn-wa{height:46px;font-size:15px;text-decoration:none}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.bar{transition:none}}
 </style>
 </head>
@@ -214,7 +199,6 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
 
 <main>
   <p class="hint" id="hint">Cada producto tiene un número. Elegí la cantidad que necesitás, revisá tu pedido en el carrito y enviálo por WhatsApp.</p>
-  <section class="kits" id="kits" aria-labelledby="kitsTitle" hidden></section>
   <div id="list"></div>
 </main>
 <section class="resenas" id="resenas" aria-labelledby="resTitle" hidden><h2 id="resTitle">Lo que dicen nuestros clientes</h2><p>Reseñas que nos mandaron por WhatsApp después de recibir su pedido.</p><div class="res-grid" id="resGrid"></div></section>
@@ -314,17 +298,40 @@ const CONFIG = {
   ENVIO_GRATIS_DESDE: 350000,     // en pesos. 0 = no se muestra
 
   // ---------- KITS ----------
-  // Productos del catálogo (n = N° de producto, q = cantidad). El precio sale de la lista vigente menos el descuento.
-  KIT_DESCUENTO: 5,               // % sobre la suma de los precios de lista (1 kit)
-  KIT_PACK_DESCUENTO: 10,         // % sobre la suma de los precios de lista (pack de KIT_PACK u.)
-  KIT_PACK: 5,                    // kits del pack; si no llega al pedido mínimo se sube solo hasta llegar
+  // Se agregan al catálogo como productos (N° 901 en adelante) y se suman al carrito como cualquier otro.
+  // El precio sale de la suma de las listas vigentes de sus productos (n = N° de producto, q = cantidad).
+  KIT_DESCUENTO: 5,               // % sobre la suma de las listas (1 kit)
+  KIT_PACK: 5,                    // desde cuántos kits se aplica KIT_PACK_DESCUENTO
+  KIT_PACK_DESCUENTO: 10,         // % sobre la suma de las listas (KIT_PACK kits o más)
   KITS: [
-    { nombre: 'Kit Corte de Luz', desc: 'Lámpara recargable con carga solar, tres tubos con imán para pegar donde haga falta y pilas. Todo lo que se necesita cuando se corta la luz.',
+    { n: 901, nombre: 'Kit Corte de Luz', desc: 'Lámpara recargable con carga solar, tres tubos con imán y pilas. Todo para cuando se corta la luz.',
       items: [{ n: 501, q: 1 }, { n: 279, q: 1 }, { n: 277, q: 2 }, { n: 394, q: 4 }, { n: 395, q: 4 }] },
-    { nombre: 'Kit Celu en el Auto', desc: 'Soporte magnético con ventosa, cargador de auto con cable Type-C y cable 3 en 1. Compra por impulso para kioscos y accesorios.',
+    { n: 902, nombre: 'Kit Corte de Luz Plus', desc: 'Lámpara recargable y dos tubos de luz largos para toda la casa, más pilas AA y AAA.',
+      items: [{ n: 501, q: 1 }, { n: 280, q: 1 }, { n: 287, q: 1 }, { n: 394, q: 4 }, { n: 395, q: 4 }] },
+    { n: 903, nombre: 'Kit Celu en el Auto', desc: 'Soporte magnético, cargador de auto con cable Type-C y cable 3 en 1. Compra por impulso para kioscos.',
       items: [{ n: 180, q: 1 }, { n: 570, q: 1 }, { n: 172, q: 1 }] },
-    { nombre: 'Kit Regalo Tech', desc: 'Smartwatch y auriculares inalámbricos con estuche con pantalla, más un cable 3 en 1 para cargar todo.',
-      items: [{ n: 119, q: 1 }, { n: 41, q: 1 }, { n: 172, q: 1 }] }
+    { n: 904, nombre: 'Kit Auto Pro', desc: 'Soporte de rejilla con carga inalámbrica, cargador de auto de 38W y cable 3 en 1.',
+      items: [{ n: 213, q: 1 }, { n: 196, q: 1 }, { n: 172, q: 1 }] },
+    { n: 905, nombre: 'Kit Auto Familia', desc: 'Cargador de 120W con 3 tomas y 2 puertos, cargador de 38W y dos cables 3 en 1 para todos los celulares del auto.',
+      items: [{ n: 203, q: 1 }, { n: 196, q: 1 }, { n: 172, q: 2 }] },
+    { n: 906, nombre: 'Kit Moto Delivery', desc: 'Soporte para moto con sombrilla, power bank de 10.000 mAh y cable 3 en 1 para repartidores.',
+      items: [{ n: 202, q: 1 }, { n: 560, q: 1 }, { n: 172, q: 1 }] },
+    { n: 907, nombre: 'Kit Regalo Tech', desc: 'Smartwatch y auriculares inalámbricos con estuche con pantalla, más un cable 3 en 1.',
+      items: [{ n: 119, q: 1 }, { n: 41, q: 1 }, { n: 172, q: 1 }] },
+    { n: 908, nombre: 'Kit Verano Sin Mosquitos', desc: 'Raqueta eléctrica recargable, lámpara UV USB y mini ventilador de mano para las noches de verano.',
+      items: [{ n: 339, q: 1 }, { n: 332, q: 1 }, { n: 1, q: 1 }] },
+    { n: 909, nombre: 'Kit Escritorio Home Office', desc: 'Zapatilla con USB y Type-C, mouse inalámbrico, cargador de pared de 35W y cable 3 en 1.',
+      items: [{ n: 399, q: 1 }, { n: 238, q: 1 }, { n: 176, q: 1 }, { n: 172, q: 1 }] },
+    { n: 910, nombre: 'Kit Gamer', desc: 'Teclado gamer con cable, mouse inalámbrico y joystick PS3 con cable para PC.',
+      items: [{ n: 248, q: 1 }, { n: 238, q: 1 }, { n: 246, q: 1 }] },
+    { n: 911, nombre: 'Kit Camping y Linterna', desc: 'Linterna multifunción USB-C, linterna solar de emergencia y pilas AA y AAA.',
+      items: [{ n: 281, q: 1 }, { n: 285, q: 1 }, { n: 394, q: 4 }, { n: 395, q: 4 }] },
+    { n: 912, nombre: 'Kit Luz Automática', desc: 'Tres barras de luz LED con sensor, recargables y autoadhesivas, para pasillos, placares y escaleras.',
+      items: [{ n: 284, q: 2 }, { n: 289, q: 1 }] },
+    { n: 913, nombre: 'Kit Creador de Contenido', desc: 'Luz LED para selfie con clip, cargador inalámbrico magnético y cable 3 en 1.',
+      items: [{ n: 185, q: 1 }, { n: 184, q: 1 }, { n: 172, q: 1 }] },
+    { n: 914, nombre: 'Kit Viaje Sin Batería', desc: 'Power bank de 10.000 mAh, cargador de pared de 35W con dos puertos y cable 3 en 1.',
+      items: [{ n: 560, q: 1 }, { n: 176, q: 1 }, { n: 172, q: 1 }] }
   ],
 
   // ---------- RESEÑAS ----------
@@ -355,6 +362,18 @@ function num(v, dec) { const [i, f] = v.toFixed(dec).split('.'); const g = i.rep
 const dec = (v, cur) => cur === 'USD' || !Number.isInteger(v) ? 2 : 0;
 function money(v, cur) { return (cur === 'USD' ? 'US$ ' : '$ ') + num(v, dec(v, cur)); }
 
+// Kits armados: pasan a ser productos del rubro "Kits armados" (el primero) con sus propios niveles.
+RUBROS.unshift('Kits armados'); PRODUCTOS.forEach(p => { p.r++; });
+(function () {
+  const por = new Map(PRODUCTOS.map(p => [p.n, p]));
+  (CONFIG.KITS || []).forEach(k => {
+    const ps = k.items.map(i => por.get(i.n));
+    if (ps.some(p => !p || listaARS(p) === null)) return;
+    const inc = k.items.map((i, x) => i.q + ' × ' + ps[x].t).join(' + ');
+    PRODUCTOS.push({ n: k.n, r: 0, t: k.nombre, d: k.desc, inc, p: k.items.reduce((a, i, x) => a + listaARS(ps[x]) * i.q, 0), c: 'ARS', kit: true });
+    IMGS[k.n] = IMGS[k.items[0].n]; // foto del producto principal
+  });
+})();
 const BY_N = new Map(PRODUCTOS.map(p => [p.n, p]));
 PRODUCTOS.forEach(p => { p.h = norm([pad(p.n), p.t, p.d || '', p.m || '', RUBROS[p.r]].join(' ')); });
 
@@ -396,6 +415,8 @@ const paso = p => packDe(p) || 1;
 function ajustarQty(p, q) { const k = paso(p); return Math.min(9999 - 9999 % k, Math.ceil(q / k) * k); }
 // Niveles del producto con sus unidades mínimas, de menor a mayor.
 function escalera(p) {
+  if (p.kit) return [{ nombre: 'Kit', desc: Number(CONFIG.KIT_DESCUENTO) || 0, caja: false, desde: 1 },
+    { nombre: 'Pack ' + CONFIG.KIT_PACK + '+', desc: Number(CONFIG.KIT_PACK_DESCUENTO) || 0, caja: false, desde: CONFIG.KIT_PACK }];
   if (packDe(p)) return [];
   return CONFIG.NIVELES.map(nv => ({
     nombre: nv.nombre, desc: Number(nv.descuento) || 0, caja: nv.desde === 'bulto',
@@ -478,13 +499,14 @@ function subHTML(p, q) {
 }
 
 function cardHTML(p) {
-  const q = state.cart[p.n] || 0, u = unit(p), c = pad(p.n), que = packDe(p) ? 'un pack' : 'una unidad';
+  const q = state.cart[p.n] || 0, u = p.kit ? precioCon(p, Number(CONFIG.KIT_DESCUENTO) || 0) : unit(p), c = pad(p.n), que = packDe(p) ? 'un pack' : 'una unidad';
   return `<article class="card${q ? ' on' : ''}" data-n="${p.n}">
   <div class="pic"><span class="code">${c}</span><img alt="${esc(p.t)}" data-n="${p.n}" width="260" height="195"></div>
   <div class="body">
     <h3 class="name">${esc(p.t)}</h3>
     ${p.d ? `<p class="desc">${esc(p.d)}</p>` : ''}
     ${p.m ? `<p class="mod">Modelo ${esc(p.m)}</p>` : ''}
+    ${p.inc ? `<p class="mod">Incluye: ${esc(p.inc)}</p>` : ''}
     ${p.b ? `<p class="bulto">Bulto: ${num(p.b, 0)} ${p.b === 1 ? 'unidad' : 'u.'}</p>` : ''}
     <div class="buy">
       <div class="price"><small>${u.cur === 'USD' ? 'US$' : '$'}</small>${num(u.v, dec(u.v, u.cur))}</div>
@@ -507,7 +529,6 @@ function visible() {
 }
 
 function render() {
-  renderKits();
   const list = visible(), host = $('#list');
   if (!list.length) {
     host.innerHTML = `<div class="empty"><strong>No encontramos productos${state.q ? ' para “' + esc(state.q) + '”' : ''}</strong>Revisá la ortografía, probá con una sola palabra o buscá por número.<br><button type="button" id="resetFilters">Ver todo el catálogo</button></div>`;
@@ -522,28 +543,6 @@ function render() {
   });
   host.innerHTML = html;
   host.querySelectorAll('img[data-n]').forEach(img => io ? io.observe(img) : loadImg(img));
-}
-
-// Kits armados: solo se muestran sin búsqueda ni rubro elegido. Precio = suma de listas − descuento, redondeado a $100.
-function renderKits() {
-  const host = $('#kits'), kits = (CONFIG.KITS || []).filter(k => k.items.every(i => BY_N.has(i.n) && listaARS(BY_N.get(i.n)) !== null));
-  host.hidden = !kits.length || !!state.q || state.rubro !== -1;
-  if (host.hidden) return;
-  const r100 = v => Math.round(v / 100) * 100;
-  const wa = String(CONFIG.WHATSAPP).replace(/\D/g, '');
-  host.innerHTML = `<h2 id="kitsTitle">Kits armados</h2><p>Varios productos en una sola compra, con descuento sobre la suma de los precios de lista. Precios por transferencia; con Mercado Pago se suma el ${CONFIG.RECARGO_MP}%.</p><div class="kit-grid">` +
-    kits.map(k => {
-      const suelto = k.items.reduce((a, i) => a + listaARS(BY_N.get(i.n)) * i.q, 0);
-      const uno = r100(suelto * (1 - CONFIG.KIT_DESCUENTO / 100)), pack = r100(suelto * (1 - CONFIG.KIT_PACK_DESCUENTO / 100));
-      const np = Math.max(CONFIG.KIT_PACK, Math.ceil((Number(CONFIG.PEDIDO_MINIMO) || 0) / pack));
-      const msg = `${CONFIG.SALUDO}\n\n*${k.nombre}* (1 u.): ${pesos(uno)}\nPack de ${np} kits: ${pesos(pack * np)} (${pesos(pack)} c/u)\n\nContiene: ` +
-        k.items.map(i => i.q + ' x ' + BY_N.get(i.n).t).join(', ') + '\n\nMe interesa: (indicá cantidad)';
-      return `<article class="kit"><h3>${esc(k.nombre)}</h3><p class="kit-d">${esc(k.desc)}</p>
-        <ul>${k.items.map(i => `<li>${i.q} × ${esc(BY_N.get(i.n).t)} <small>#${pad(i.n)}</small></li>`).join('')}</ul>
-        <div class="kit-p"><s>Suelto ${pesos(suelto)}</s><div class="price">${pesos(uno)} <em>el kit</em></div><span class="ah">Ahorrás ${pesos(suelto - uno)}</span>
-        <span class="pk">Pack de ${np} kits: <b>${pesos(pack * np)}</b> (${pesos(pack)} c/u)</span></div>
-        <a class="btn btn-wa" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Pedir por WhatsApp</a></article>`;
-    }).join('') + '</div>';
 }
 
 function renderChips() {
@@ -635,6 +634,7 @@ function buildMessage(nro) {
     if (p.r !== rub) { rub = p.r; out.push('_' + RUBROS[rub] + '_'); }
     out.push(`${pad(n)} · ${p.t}`, `      ${q} u. × ${money(L.u.v, L.cur)} (${L.nivel}) = ${money(L.sub, L.cur)}` +
       (L.ahorro > 0 ? ` · ahorrás ${money(L.ahorro, L.cur)}` : ''));
+    if (p.kit) out.push(`      Incluye: ${p.inc}`);
   });
   out.push('------------------------', `Productos: ${lines} · Unidades: ${units}`);
   if (hayAhorro(a)) out.push('Ahorro por cantidad: ' + totalText(a));
