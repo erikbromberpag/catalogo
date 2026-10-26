@@ -317,7 +317,7 @@ const CONFIG = {
   // Productos del catálogo (n = N° de producto, q = cantidad). El precio sale de la lista vigente menos el descuento.
   KIT_DESCUENTO: 5,               // % sobre la suma de los precios de lista (1 kit)
   KIT_PACK_DESCUENTO: 10,         // % sobre la suma de los precios de lista (pack de KIT_PACK u.)
-  KIT_PACK: 5,
+  KIT_PACK: 5,                    // kits del pack; si no llega al pedido mínimo se sube solo hasta llegar
   KITS: [
     { nombre: 'Kit Corte de Luz', desc: 'Lámpara recargable con carga solar, tres tubos con imán para pegar donde haga falta y pilas. Todo lo que se necesita cuando se corta la luz.',
       items: [{ n: 501, q: 1 }, { n: 279, q: 1 }, { n: 277, q: 2 }, { n: 394, q: 4 }, { n: 395, q: 4 }] },
@@ -529,12 +529,13 @@ function renderKits() {
   const host = $('#kits'), kits = (CONFIG.KITS || []).filter(k => k.items.every(i => BY_N.has(i.n) && listaARS(BY_N.get(i.n)) !== null));
   host.hidden = !kits.length || !!state.q || state.rubro !== -1;
   if (host.hidden) return;
-  const r100 = v => Math.round(v / 100) * 100, np = CONFIG.KIT_PACK;
+  const r100 = v => Math.round(v / 100) * 100;
   const wa = String(CONFIG.WHATSAPP).replace(/\D/g, '');
   host.innerHTML = `<h2 id="kitsTitle">Kits armados</h2><p>Varios productos en una sola compra, con descuento sobre la suma de los precios de lista. Precios por transferencia; con Mercado Pago se suma el ${CONFIG.RECARGO_MP}%.</p><div class="kit-grid">` +
     kits.map(k => {
       const suelto = k.items.reduce((a, i) => a + listaARS(BY_N.get(i.n)) * i.q, 0);
       const uno = r100(suelto * (1 - CONFIG.KIT_DESCUENTO / 100)), pack = r100(suelto * (1 - CONFIG.KIT_PACK_DESCUENTO / 100));
+      const np = Math.max(CONFIG.KIT_PACK, Math.ceil((Number(CONFIG.PEDIDO_MINIMO) || 0) / pack));
       const msg = `${CONFIG.SALUDO}\n\n*${k.nombre}* (1 u.): ${pesos(uno)}\nPack de ${np} kits: ${pesos(pack * np)} (${pesos(pack)} c/u)\n\nContiene: ` +
         k.items.map(i => i.q + ' x ' + BY_N.get(i.n).t).join(', ') + '\n\nMe interesa: (indicá cantidad)';
       return `<article class="kit"><h3>${esc(k.nombre)}</h3><p class="kit-d">${esc(k.desc)}</p>
