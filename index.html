@@ -51,7 +51,9 @@ input,textarea{font:inherit;color:inherit}
 
 /* ---------- contenido ---------- */
 main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
-.hint{margin:0 0 14px;color:var(--muted);font-size:14px;max-width:62ch}
+.hint{margin:0 0 14px;color:var(--muted);font-size:14px;max-width:70ch}
+.hint span{display:block}
+.hint b{color:var(--ink);font-weight:700;white-space:nowrap}
 .rubro{margin:0 0 34px;scroll-margin-top:var(--head-h)}
 .rubro h2{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;font-size:28px;line-height:1.1;font-weight:800;font-stretch:78%;letter-spacing:.005em}
 .rubro h2 small{font-size:14px;font-weight:500;font-stretch:100%;color:var(--muted)}
@@ -643,12 +645,18 @@ $('#cliente').addEventListener('input', persist); $('#notas').addEventListener('
    INICIO
    ===================================================================== */
 document.title = CONFIG.NEGOCIO + ' · Octubre 2026';
-const setHint = () => { $('#hint').textContent = 'Cada producto tiene un número. Elegí la cantidad que necesitás, revisá tu pedido en el carrito y enviálo por WhatsApp. ' +
-  'Precios por unidad para pago por transferencia. Comprando más unidades del mismo producto pagás menos: ' +
-  CONFIG.NIVELES.filter(nv => nv.descuento > 0).map(nv => (nv.desde === 'bulto' ? 'caja cerrada' : nv.desde + '+ u.') + ' −' + nv.descuento + '%').join(', ') + '.' +
-  (RECARGO ? ' Mercado Pago +' + num(RECARGO * 100, 0) + '%.' : '') +
-  (CONFIG.PEDIDO_MINIMO > 0 ? ' Pedido mínimo ' + pesos(CONFIG.PEDIDO_MINIMO) + '.' : '') +
-  (CONFIG.ENVIO_GRATIS_DESDE > 0 ? ' Envío gratis desde ' + pesos(CONFIG.ENVIO_GRATIS_DESDE) + '.' : ''); };
+// Texto de arriba del catálogo: cómo pedir y los descuentos por cantidad, en dos líneas cortas.
+const setHint = () => {
+  const desc = CONFIG.NIVELES.filter(nv => nv.descuento > 0)
+    .map(nv => `<b>${nv.desde === 'bulto' ? 'Caja cerrada' : nv.desde + ' o más'}: −${nv.descuento}%</b>`).join(' · ');
+  const reglas = [
+    CONFIG.PEDIDO_MINIMO > 0 ? 'Pedido mínimo ' + pesos(CONFIG.PEDIDO_MINIMO) : '',
+    CONFIG.ENVIO_GRATIS_DESDE > 0 ? 'Envío gratis desde ' + pesos(CONFIG.ENVIO_GRATIS_DESDE) : '',
+    RECARGO ? 'Mercado Pago +' + num(RECARGO * 100, 0) + '%' : ''
+  ].filter(Boolean).join(' · ');
+  $('#hint').innerHTML = `<span>Más unidades del mismo producto, mejor precio: ${desc}</span>` +
+    (reglas ? `<span>${esc(reglas)}</span>` : '');
+};
 setHint();
 $('#negocio').textContent = CONFIG.NEGOCIO; $('#sub').textContent = CONFIG.SUBTITULO; $('#foot').textContent = CONFIG.PIE;
 if (TC) { $('#money').hidden = false; document.querySelectorAll('#money button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === state.moneda))); }
