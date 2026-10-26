@@ -167,6 +167,21 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
 .empty-cart{padding:30px 10px;text-align:center;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:60;max-width:min(92vw,460px);background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:12px;padding:12px 16px;font-size:14.5px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.25)}
 .toast[hidden]{display:none}
+/* ---------- kits ---------- */
+.kits{margin:0 0 34px}
+.kits h2{margin:0 0 4px;font-size:28px;line-height:1.1;font-weight:800;font-stretch:78%}
+.kits>p{margin:0 0 12px;color:var(--muted);font-size:14px;max-width:70ch}
+.kit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
+.kit{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:14px}
+.kit h3{margin:0;font-size:20px;font-weight:800;font-stretch:80%}
+.kit-d{margin:0;font-size:13.5px;color:var(--muted)}
+.kit ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2)}
+.kit-p{margin-top:auto;display:grid;gap:2px;padding-top:6px;font-variant-numeric:tabular-nums}
+.kit-p s{color:var(--muted);font-size:13px}
+.kit-p .price em{font-style:normal;font-size:13px;font-weight:600;color:var(--muted)}
+.kit-p .ah{color:var(--wa-dark);font-weight:650;font-size:13px}
+.kit-p .pk{font-size:13px;color:var(--ink-2)}
+.kit .btn-wa{height:46px;font-size:15px;text-decoration:none}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.bar{transition:none}}
 </style>
 </head>
@@ -199,6 +214,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
 
 <main>
   <p class="hint" id="hint">Cada producto tiene un número. Elegí la cantidad que necesitás, revisá tu pedido en el carrito y enviálo por WhatsApp.</p>
+  <section class="kits" id="kits" aria-labelledby="kitsTitle" hidden></section>
   <div id="list"></div>
 </main>
 <section class="resenas" id="resenas" aria-labelledby="resTitle" hidden><h2 id="resTitle">Lo que dicen nuestros clientes</h2><p>Reseñas que nos mandaron por WhatsApp después de recibir su pedido.</p><div class="res-grid" id="resGrid"></div></section>
@@ -296,6 +312,20 @@ const CONFIG = {
   PEDIDO_MINIMO: 100000,          // en pesos. 0 = sin mínimo
   PEDIDO_MINIMO_BLOQUEA: false,   // true = no deja enviar el pedido hasta llegar al mínimo
   ENVIO_GRATIS_DESDE: 350000,     // en pesos. 0 = no se muestra
+
+  // ---------- KITS ----------
+  // Productos del catálogo (n = N° de producto, q = cantidad). El precio sale de la lista vigente menos el descuento.
+  KIT_DESCUENTO: 5,               // % sobre la suma de los precios de lista (1 kit)
+  KIT_PACK_DESCUENTO: 10,         // % sobre la suma de los precios de lista (pack de KIT_PACK u.)
+  KIT_PACK: 5,                    // kits del pack; si no llega al pedido mínimo se sube solo hasta llegar
+  KITS: [
+    { nombre: 'Kit Corte de Luz', desc: 'Lámpara recargable con carga solar, tres tubos con imán para pegar donde haga falta y pilas. Todo lo que se necesita cuando se corta la luz.',
+      items: [{ n: 501, q: 1 }, { n: 279, q: 1 }, { n: 277, q: 2 }, { n: 394, q: 4 }, { n: 395, q: 4 }] },
+    { nombre: 'Kit Celu en el Auto', desc: 'Soporte magnético con ventosa, cargador de auto con cable Type-C y cable 3 en 1. Compra por impulso para kioscos y accesorios.',
+      items: [{ n: 180, q: 1 }, { n: 570, q: 1 }, { n: 172, q: 1 }] },
+    { nombre: 'Kit Regalo Tech', desc: 'Smartwatch y auriculares inalámbricos con estuche con pantalla, más un cable 3 en 1 para cargar todo.',
+      items: [{ n: 119, q: 1 }, { n: 41, q: 1 }, { n: 172, q: 1 }] }
+  ],
 
   // ---------- RESEÑAS ----------
   // Las que mandan los clientes por WhatsApp (con su permiso). La sección aparece sola cuando hay al menos una.
@@ -477,6 +507,7 @@ function visible() {
 }
 
 function render() {
+  renderKits();
   const list = visible(), host = $('#list');
   if (!list.length) {
     host.innerHTML = `<div class="empty"><strong>No encontramos productos${state.q ? ' para “' + esc(state.q) + '”' : ''}</strong>Revisá la ortografía, probá con una sola palabra o buscá por número.<br><button type="button" id="resetFilters">Ver todo el catálogo</button></div>`;
@@ -491,6 +522,28 @@ function render() {
   });
   host.innerHTML = html;
   host.querySelectorAll('img[data-n]').forEach(img => io ? io.observe(img) : loadImg(img));
+}
+
+// Kits armados: solo se muestran sin búsqueda ni rubro elegido. Precio = suma de listas − descuento, redondeado a $100.
+function renderKits() {
+  const host = $('#kits'), kits = (CONFIG.KITS || []).filter(k => k.items.every(i => BY_N.has(i.n) && listaARS(BY_N.get(i.n)) !== null));
+  host.hidden = !kits.length || !!state.q || state.rubro !== -1;
+  if (host.hidden) return;
+  const r100 = v => Math.round(v / 100) * 100;
+  const wa = String(CONFIG.WHATSAPP).replace(/\D/g, '');
+  host.innerHTML = `<h2 id="kitsTitle">Kits armados</h2><p>Varios productos en una sola compra, con descuento sobre la suma de los precios de lista. Precios por transferencia; con Mercado Pago se suma el ${CONFIG.RECARGO_MP}%.</p><div class="kit-grid">` +
+    kits.map(k => {
+      const suelto = k.items.reduce((a, i) => a + listaARS(BY_N.get(i.n)) * i.q, 0);
+      const uno = r100(suelto * (1 - CONFIG.KIT_DESCUENTO / 100)), pack = r100(suelto * (1 - CONFIG.KIT_PACK_DESCUENTO / 100));
+      const np = Math.max(CONFIG.KIT_PACK, Math.ceil((Number(CONFIG.PEDIDO_MINIMO) || 0) / pack));
+      const msg = `${CONFIG.SALUDO}\n\n*${k.nombre}* (1 u.): ${pesos(uno)}\nPack de ${np} kits: ${pesos(pack * np)} (${pesos(pack)} c/u)\n\nContiene: ` +
+        k.items.map(i => i.q + ' x ' + BY_N.get(i.n).t).join(', ') + '\n\nMe interesa: (indicá cantidad)';
+      return `<article class="kit"><h3>${esc(k.nombre)}</h3><p class="kit-d">${esc(k.desc)}</p>
+        <ul>${k.items.map(i => `<li>${i.q} × ${esc(BY_N.get(i.n).t)} <small>#${pad(i.n)}</small></li>`).join('')}</ul>
+        <div class="kit-p"><s>Suelto ${pesos(suelto)}</s><div class="price">${pesos(uno)} <em>el kit</em></div><span class="ah">Ahorrás ${pesos(suelto - uno)}</span>
+        <span class="pk">Pack de ${np} kits: <b>${pesos(pack * np)}</b> (${pesos(pack)} c/u)</span></div>
+        <a class="btn btn-wa" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Pedir por WhatsApp</a></article>`;
+    }).join('') + '</div>';
 }
 
 function renderChips() {
