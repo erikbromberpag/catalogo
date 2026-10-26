@@ -21,7 +21,7 @@ html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.4 var(--font);-webkit-font-smoothing:antialiased}
 body.has-bar{padding-bottom:92px}
 button{font:inherit;color:inherit;cursor:pointer}
-input,textarea{font:inherit;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--signal);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
@@ -95,6 +95,14 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
 .empty{margin:40px auto;max-width:42ch;text-align:center;color:var(--muted)}
 .empty strong{display:block;font-size:18px;color:var(--ink);margin-bottom:6px}
 .empty button{margin-top:12px;border:1.5px solid var(--ink);background:#fff;border-radius:10px;padding:10px 16px;font-weight:650}
+.resenas{max-width:1280px;margin:0 auto;padding:8px 16px 26px}
+.resenas h2{font-size:20px;font-weight:800;margin:0 0 4px}
+.resenas>p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.res{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px;align-content:start}
+.res blockquote{margin:0;font-size:15px;line-height:1.5}
+.res figcaption{font-size:13px;color:var(--muted)}
+.res figcaption b{color:var(--ink);font-weight:650}
 .foot{max-width:1280px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:13px}
 
 /* ---------- barra de carrito ---------- */
@@ -153,7 +161,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
 .totals b span{white-space:nowrap}
 .fields{display:grid;gap:8px;margin-top:14px}
 .fields label{font-size:13px;color:var(--muted);font-weight:550}
-.fields input,.fields textarea{width:100%;margin-top:3px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px;background:#fff;resize:vertical}
+.fields input,.fields select,.fields textarea{width:100%;margin-top:3px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px;background:#fff;resize:vertical}
 .row2{display:flex;gap:8px;margin-top:10px}
 .row2 .btn-ghost{flex:1}
 .empty-cart{padding:30px 10px;text-align:center;color:var(--muted)}
@@ -193,6 +201,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
   <p class="hint" id="hint">Cada producto tiene un número. Elegí la cantidad que necesitás, revisá tu pedido en el carrito y enviálo por WhatsApp.</p>
   <div id="list"></div>
 </main>
+<section class="resenas" id="resenas" aria-labelledby="resTitle" hidden><h2 id="resTitle">Lo que dicen nuestros clientes</h2><p>Reseñas que nos mandaron por WhatsApp después de recibir su pedido.</p><div class="res-grid" id="resGrid"></div></section>
 <p class="foot" id="foot"></p>
 
 <div class="bar" id="bar" hidden>
@@ -208,10 +217,25 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
   <div class="sheet-body">
   <div class="lines" id="lines"></div>
   <div id="extras">
-    <div class="fields">
-      <label>Tu nombre o el de tu negocio<input id="cliente" type="text" autocomplete="name" placeholder="Opcional"></label>
-      <label>Notas del pedido<textarea id="notas" rows="2" placeholder="Dirección de envío, horario de retiro, aclaraciones…"></textarea></label>
-    </div>
+<div class="fields">
+  <label>Nombre o negocio *<input id="cliente" type="text" autocomplete="organization" maxlength="80" placeholder="Ej.: Tecno JP"></label>
+  <label>CUIT (opcional)<input id="cuit" type="text" inputmode="numeric" maxlength="13" placeholder="20-12345678-9"></label>
+  <label>Localidad y provincia *<input id="localidad" type="text" autocomplete="address-level2" maxlength="80" placeholder="Ej.: General Roca, Río Negro"></label>
+  <label>Forma de pago *<select id="pago">
+    <option value="">Elegí una opción</option>
+    <option>Transferencia</option>
+    <option>Mercado Pago (+9%)</option>
+    <option>Efectivo</option>
+  </select></label>
+  <label>Envío *<select id="envio">
+    <option value="">Elegí una opción</option>
+    <option>Andreani</option>
+    <option>Vía Cargo</option>
+    <option>Retiro en Villa Regina</option>
+  </select></label>
+  <label>Notas del pedido<textarea id="notas" rows="2" placeholder="Sucursal o dirección de envío, horario de retiro, aclaraciones…"></textarea></label>
+</div>
+
     <div class="row2">
       <button class="btn-ghost" id="copy" type="button">Copiar pedido</button>
       <button class="btn-ghost" id="clear" type="button">Vaciar carrito</button>
@@ -241,7 +265,7 @@ main{max-width:1280px;margin:0 auto;padding:16px 16px 40px}
    CONFIGURACIÓN — editá solo esta parte
    ===================================================================== */
 const CONFIG = {
-  NEGOCIO:   'Catálogo mayorista DYN',        // nombre que se muestra arriba y en el mensaje
+  NEGOCIO:   'DYN mayorista',        // nombre que se muestra arriba y en el mensaje
   SUBTITULO: 'Lista de precios ',
   WHATSAPP:  '5492984227160',             // TU número: código de país + código de área + número, sin + ni espacios (ej. Argentina celular: 549 + área + número)
   // Los productos 001-411 están en dólares (US$) y del 412 en adelante en pesos ($).
@@ -271,7 +295,12 @@ const CONFIG = {
   RECARGO_MP: 9,                  // % que se suma al total si pagan con Mercado Pago (los precios de la página son de transferencia)
   PEDIDO_MINIMO: 100000,          // en pesos. 0 = sin mínimo
   PEDIDO_MINIMO_BLOQUEA: false,   // true = no deja enviar el pedido hasta llegar al mínimo
-  ENVIO_GRATIS_DESDE: 350000      // en pesos. 0 = no se muestra
+  ENVIO_GRATIS_DESDE: 350000,     // en pesos. 0 = no se muestra
+
+  // ---------- RESEÑAS ----------
+  // Las que mandan los clientes por WhatsApp (con su permiso). La sección aparece sola cuando hay al menos una.
+  // Ejemplo: { texto: 'Llegó todo perfecto y rápido.', nombre: 'Tecno JP', localidad: 'General Roca' },
+  RESENAS: []
 };
 
 /* =====================================================================
@@ -301,16 +330,27 @@ PRODUCTOS.forEach(p => { p.h = norm([pad(p.n), p.t, p.d || '', p.m || '', RUBROS
 
 /* ---------- estado ---------- */
 const state = { q: '', rubro: -1, moneda: CONFIG.MONEDA_INICIAL === 'USD' ? 'USD' : 'ARS', cart: {} };
-try {
-  const saved = JSON.parse(localStorage.getItem(CONFIG.CLAVE_GUARDADO) || '{}');
-  if (saved && typeof saved === 'object') {
-    if (saved.cart) for (const k in saved.cart) { const q = parseInt(saved.cart[k], 10); if (BY_N.has(+k) && q > 0) state.cart[k] = ajustarQty(BY_N.get(+k), Math.min(q, 9999)); }
-    if (saved.cliente) $('#cliente').value = String(saved.cliente).slice(0, 80);
-    if (saved.notas) $('#notas').value = String(saved.notas).slice(0, 500);
-  }
-} catch (e) { /* sin almacenamiento: el carrito vive solo en esta visita */ }
+// Datos del cliente: quedan guardados en su navegador para la próxima compra.
+const CAMPOS = ['cliente', 'cuit', 'localidad', 'pago', 'envio', 'notas'];
+const OBLIGATORIOS = { cliente: 'nombre o negocio', localidad: 'localidad', pago: 'forma de pago', envio: 'envío' };
+const val = id => { const el = $('#' + id); return el ? el.value.trim() : ''; };
+const faltanDatos = () => Object.keys(OBLIGATORIOS).filter(id => !val(id));
+function nroPedido() { // DYN-DDMM-1234: el cliente lo usa al mandar el comprobante
+  const f = new Date();
+  return 'DYN-' + String(f.getDate()).padStart(2, '0') + String(f.getMonth() + 1).padStart(2, '0') + '-' + (1000 + Math.floor(Math.random() * 9000));
+}
+// Se llama en INICIO, cuando ya existen las funciones de precios (antes fallaba en silencio y no recuperaba el carrito).
+function restaurar() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CONFIG.CLAVE_GUARDADO) || '{}');
+    if (saved && typeof saved === 'object') {
+      if (saved.cart) for (const k in saved.cart) { const q = parseInt(saved.cart[k], 10); if (BY_N.has(+k) && q > 0) state.cart[k] = ajustarQty(BY_N.get(+k), Math.min(q, 9999)); }
+      CAMPOS.forEach(id => { const el = $('#' + id); if (el && saved[id]) el.value = String(saved[id]).slice(0, id === 'notas' ? 500 : 80); });
+    }
+  } catch (e) { /* sin almacenamiento: el carrito vive solo en esta visita */ }
+}
 function persist() {
-  try { localStorage.setItem(CONFIG.CLAVE_GUARDADO, JSON.stringify({ cart: state.cart, cliente: $('#cliente').value, notas: $('#notas').value })); } catch (e) {}
+  try { const d = { cart: state.cart }; CAMPOS.forEach(id => { d[id] = val(id); }); localStorage.setItem(CONFIG.CLAVE_GUARDADO, JSON.stringify(d)); } catch (e) {}
 }
 
 /* ---------- precios por cantidad (los niveles se configuran en CONFIG.NIVELES) ---------- */
@@ -526,29 +566,34 @@ function closeCart() { $('#sheet').hidden = true; $('#shade').hidden = true; doc
 /* =====================================================================
    MENSAJE DE WHATSAPP
    ===================================================================== */
-function buildMessage() {
+function buildMessage(nro) {
   const keys = Object.keys(state.cart).map(Number).sort((a, b) => BY_N.get(a).r - BY_N.get(b).r || a - b);
   const tot = totals(), { t, a, mp, lines, units } = tot;
-  const cliente = $('#cliente').value.trim(), notas = $('#notas').value.trim();
+  const esMP = /mercado pago/i.test(val('pago')), retiro = /retiro/i.test(val('envio'));
   const f = new Date(), fecha = String(f.getDate()).padStart(2, '0') + '/' + String(f.getMonth() + 1).padStart(2, '0') + '/' + f.getFullYear();
-  const out = [CONFIG.SALUDO, '', '*PEDIDO · ' + CONFIG.NEGOCIO + '*', 'Fecha: ' + fecha];
-  if (cliente) out.push('Cliente: ' + cliente);
+  const out = [CONFIG.SALUDO, '', '*PEDIDO ' + nro + '*', CONFIG.NEGOCIO + ' · ' + fecha,
+    '', '*CLIENTE*', 'Nombre / negocio: ' + (val('cliente') || '—')];
+  if (val('cuit')) out.push('CUIT: ' + val('cuit'));
+  out.push('Localidad: ' + (val('localidad') || '—'),
+    'Pago: ' + (val('pago') || '—'), 'Envío: ' + (val('envio') || '—'), '', '*PRODUCTOS*');
   let rub = -1;
   keys.forEach(n => {
     const p = BY_N.get(n), q = state.cart[n], L = linea(p, q);
-    if (p.r !== rub) { rub = p.r; out.push('', '*' + RUBROS[rub] + '*'); }
+    if (p.r !== rub) { rub = p.r; out.push('_' + RUBROS[rub] + '_'); }
     out.push(`${pad(n)} · ${p.t}`, `      ${q} u. × ${money(L.u.v, L.cur)} (${L.nivel}) = ${money(L.sub, L.cur)}` +
       (L.ahorro > 0 ? ` · ahorrás ${money(L.ahorro, L.cur)}` : ''));
   });
-  out.push('', '------------------------', `Productos: ${lines} · Unidades: ${units}`);
+  out.push('------------------------', `Productos: ${lines} · Unidades: ${units}`);
   if (hayAhorro(a)) out.push('Ahorro por cantidad: ' + totalText(a));
-  out.push('*TOTAL transferencia: ' + totalText(t) + '*');
-  if (RECARGO) out.push(`Total con Mercado Pago (+${num(RECARGO * 100, 0)}%): ` + totalText(mp));
+  if (esMP && RECARGO) out.push('Total por transferencia: ' + totalText(t), `*TOTAL A PAGAR con Mercado Pago (+${num(RECARGO * 100, 0)}%): ${totalText(mp)}*`);
+  else out.push('*TOTAL A PAGAR: ' + totalText(t) + '*');
   if (tot.faltaMin > 0) out.push(`⚠️ No llega al pedido mínimo de ${pesos(CONFIG.PEDIDO_MINIMO)} (faltan ${pesos(tot.faltaMin)})`);
-  else if (tot.faltaEnvio !== null) out.push(tot.faltaEnvio > 0 ? `Envío gratis desde ${pesos(CONFIG.ENVIO_GRATIS_DESDE)} (faltan ${pesos(tot.faltaEnvio)})` : 'Envío gratis ✅');
+  else if (!retiro && tot.faltaEnvio !== null) out.push(tot.faltaEnvio > 0
+    ? `Envío: a cotizar según destino (sin cargo desde ${pesos(CONFIG.ENVIO_GRATIS_DESDE)}; faltan ${pesos(tot.faltaEnvio)})`
+    : 'Envío sin cargo ✅');
   if (TC && state.moneda === 'USD') out.push('(Precios en dólares · dólar de referencia $ ' + num(VIS, 0) + ')');
-  if (notas) out.push('', 'Notas: ' + notas);
-  out.push('', 'Quedo atento a la confirmación de disponibilidad y forma de pago. ¡Gracias!');
+  if (val('notas')) out.push('', 'Notas: ' + val('notas'));
+  out.push('', 'Quedo a la espera de la confirmación de stock y los datos para pagar. ¡Gracias!');
   return out.join('\n');
 }
 
@@ -566,7 +611,9 @@ function sendWhatsApp() {
   if (!num_ || num_ === '54911000000') { toast('Falta configurar el número de WhatsApp del negocio (CONFIG.WHATSAPP en el código).', 7000); return; }
   const falta = totals().faltaMin;
   if (falta > 0 && CONFIG.PEDIDO_MINIMO_BLOQUEA) { toast(`El pedido mínimo es de ${pesos(CONFIG.PEDIDO_MINIMO)}. Te faltan ${pesos(falta)}.`, 6000); return; }
-  const msg = buildMessage(); persist();
+  const sinDato = faltanDatos();
+  if (sinDato.length) { toast('Para enviar el pedido completá: ' + sinDato.map(id => OBLIGATORIOS[id]).join(', ') + '.', 6000); $('#' + sinDato[0]).focus(); return; }
+  const msg = buildMessage(nroPedido()); persist();
   let url = 'https://wa.me/' + num_ + '?text=' + encodeURIComponent(msg);
   if (url.length > 6500) { // pedido muy largo: WhatsApp puede cortarlo, se copia para pegarlo en el chat
     copyText(msg); url = 'https://wa.me/' + num_;
@@ -622,7 +669,7 @@ $('#shade').addEventListener('click', closeCart);
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('#sheet').hidden) closeCart();
   if (e.key === 'Tab' && !$('#sheet').hidden) { // el foco queda dentro del carrito mientras está abierto
-    const f = [...$('#sheet').querySelectorAll('button,input,textarea')].filter(x => !x.disabled && x.offsetParent !== null);
+    const f = [...$('#sheet').querySelectorAll('button,input,select,textarea')].filter(x => !x.disabled && x.offsetParent !== null);
     if (!f.length) return; const first = f[0], last = f[f.length - 1];
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
@@ -631,7 +678,7 @@ document.addEventListener('keydown', e => {
 $('#send').addEventListener('click', sendWhatsApp);
 $('#copy').addEventListener('click', async () => {
   if (!Object.keys(state.cart).length) return toast('Todavía no hay productos en el pedido.');
-  toast((await copyText(buildMessage())) ? 'Pedido copiado. Pegalo donde quieras.' : 'No se pudo copiar. Probá con el botón de WhatsApp.', 3500);
+  toast((await copyText(buildMessage(nroPedido()))) ? 'Pedido copiado. Pegalo donde quieras.' : 'No se pudo copiar. Probá con el botón de WhatsApp.', 3500);
 });
 $('#clear').addEventListener('click', () => {
   if (!confirm('¿Vaciar el carrito? Se borran todos los productos elegidos.')) return;
@@ -639,7 +686,7 @@ $('#clear').addEventListener('click', () => {
   document.querySelectorAll('.card.on').forEach(c => { c.classList.remove('on'); $('input', c).value = 0; $('[data-sub]', c).textContent = ''; });
   updateBar(); renderCart();
 });
-$('#cliente').addEventListener('input', persist); $('#notas').addEventListener('input', persist);
+$('#extras').addEventListener('input', persist); $('#extras').addEventListener('change', persist);
 
 /* =====================================================================
    INICIO
@@ -661,7 +708,12 @@ setHint();
 $('#negocio').textContent = CONFIG.NEGOCIO; $('#sub').textContent = CONFIG.SUBTITULO; $('#foot').textContent = CONFIG.PIE;
 if (TC) { $('#money').hidden = false; document.querySelectorAll('#money button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === state.moneda))); }
 const setHeadH = () => document.documentElement.style.setProperty('--head-h', $('#top').offsetHeight + 8 + 'px');
-renderChips(); render(); updateBar(); setHeadH(); addEventListener('resize', setHeadH);
+const resenas = (CONFIG.RESENAS || []).filter(r => r && r.texto);
+if (resenas.length) {
+  $('#resGrid').innerHTML = resenas.map(r => `<figure class="res"><blockquote>“${esc(r.texto)}”</blockquote><figcaption><b>${esc(r.nombre || 'Cliente')}</b>${r.localidad ? ' · ' + esc(r.localidad) : ''}</figcaption></figure>`).join('');
+  $('#resenas').hidden = false;
+}
+restaurar(); renderChips(); render(); updateBar(); setHeadH(); addEventListener('resize', setHeadH);
 if ('fonts' in document) document.fonts.ready.then(setHeadH);
 })();
 </script>
